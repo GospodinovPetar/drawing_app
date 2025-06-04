@@ -1,4 +1,4 @@
-from shapes import RectangleShape, EllipseShape, SquareShape, LineShape
+from shapes import RectangleShape, EllipseShape, SquareShape, LineShape, PolygonShape
 from view import DragGraphicsView
 
 import sys
@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import (
     QAction,
     QColorDialog,
     QFileDialog,
-    QInputDialog,
+    QInputDialog, QGraphicsPolygonItem,
 )
 from PyQt5.QtCore import Qt, QRectF
 from PyQt5.QtGui import QPen, QBrush, QColor
@@ -42,6 +42,7 @@ class DrawingApp(QMainWindow):
             ("Ellipse", self.addEllipse),
             ("Square", self.addSquare),
             ("Line", self.addLine),
+            ("Polygon", self.addPolygon),
             ("Group", self.groupSelected),
             ("Ungroup", self.ungroupSelected),
             ("Color", self.changeColorSelected),
@@ -67,6 +68,8 @@ class DrawingApp(QMainWindow):
             item = QGraphicsRectItem(shape.x, shape.y, shape.width, shape.width)
         elif isinstance(shape, LineShape):
             item = QGraphicsLineItem(shape.x, shape.y, shape.x2, shape.y2)
+        elif isinstance(shape, PolygonShape):
+            item = self.createPolygonItem(shape)
         else:
             return
         item.shape = shape
@@ -83,6 +86,18 @@ class DrawingApp(QMainWindow):
             item.setPen(QPen(QColor(*shape.border_color), shape.stroke_width))
         self.scene.addItem(item)
         self.items.append(item)
+
+    def createPolygonItem(self, polygon):
+        from PyQt5.QtGui import QPolygonF
+        from PyQt5.QtCore import QPointF
+
+        polygon_points = [QPointF(x, y) for x, y in polygon.vertices]
+        polygon_item = QGraphicsPolygonItem(QPolygonF(polygon_points))
+        return polygon_item
+
+    def addPolygon(self):
+        vertices = [(100, 70), (200, 200), (250, 150), (225, 250), (175, 250)]
+        self.addShape(PolygonShape(vertices))
 
     def addRectangle(self):
         self.addShape(RectangleShape(50, 50, 100, 60))
@@ -210,6 +225,13 @@ class DrawingApp(QMainWindow):
             if isinstance(shape, LineShape):
                 entry["x2"] = shape.x2
                 entry["y2"] = shape.y2
+
+            elif isinstance(shape, PolygonShape):
+                entry = {
+                    "type": "PolygonShape",
+                    "vertices": shape.vertices,  # Save the vertices
+                    "fill_color": shape.fill_color,
+                }
             else:
                 entry["width"] = shape.width
                 entry["height"] = shape.height
@@ -238,6 +260,8 @@ class DrawingApp(QMainWindow):
                 shape = EllipseShape(
                     offset_x, offset_y, entry["width"], entry["height"], fill
                 )
+            elif shape_type == "PolygonShape":
+                shape = PolygonShape(entry["vertices"], tuple(entry["fill_color"]))
             elif shape_type == "SquareShape":
                 shape = SquareShape(offset_x, offset_y, entry["width"], fill)
             elif shape_type == "LineShape":

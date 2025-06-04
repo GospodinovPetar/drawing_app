@@ -10,6 +10,20 @@ class ShapeBase:
         self.group_id = None
 
 
+class PolygonShape(ShapeBase):
+    """
+    A polygon shape defined by a list of vertices and style attributes.
+    """
+
+    def __init__(self, vertices, fill=(255, 255, 255)):
+        super().__init__()
+        self.vertices = vertices  # List of (x, y) tuples
+        self.fill_color = fill
+        self.border_color = (255, 255, 255)
+        self.stroke_width = 2
+        self.alpha = 255
+
+
 class RectangleShape(ShapeBase):
     """
     A rectangle shape with position, dimensions, and style attributes.
