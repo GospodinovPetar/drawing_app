@@ -261,7 +261,15 @@ class DrawingApp(QMainWindow):
                 entry["x2"] = shape.x2
                 entry["y2"] = shape.y2
             elif isinstance(shape, PolygonShape):
-                entry["vertices"] = shape.vertices  # Save the polygon's vertices
+                # Scale the polygon's vertices before saving
+                polygon = item.polygon()
+                center = polygon.boundingRect().center()
+                scaled_vertices = []
+                for point in polygon:
+                    new_x = center.x() + (point.x() - center.x()) * item.scale()
+                    new_y = center.y() + (point.y() - center.y()) * item.scale()
+                    scaled_vertices.append((new_x, new_y))
+                entry["vertices"] = scaled_vertices  # Save the scaled vertices
 
             data.append(entry)
 
@@ -291,15 +299,16 @@ class DrawingApp(QMainWindow):
             elif shape_type == "EllipseShape":
                 shape = EllipseShape(entry["x"], entry["y"], entry["width"], entry["height"], fill_color)
             elif shape_type == "PolygonShape":
-                shape = PolygonShape(entry["vertices"], fill_color)
+                # Restore the polygon with the scaled vertices
+                scaled_vertices = entry["vertices"]
+                shape = PolygonShape(scaled_vertices, fill_color)
             elif shape_type == "SquareShape":
                 shape = SquareShape(entry["x"], entry["y"], entry["width"], fill_color)
             elif shape_type == "LineShape":
                 shape = LineShape(entry["x"], entry["y"], entry["x2"], entry["y2"], fill_color)
 
             if shape:
-                # Apply group ID
-                shape.group_id = entry.get("group_id")
+                shape.group_id = entry.get("group_id")  # Restore the group ID
 
                 # Add shape to the scene
                 self.addShape(shape)
