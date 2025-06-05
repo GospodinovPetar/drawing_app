@@ -1,5 +1,4 @@
 from PyQt5.QtWidgets import QGraphicsView, QGraphicsItem
-from PyQt5.QtCore import Qt, QPointF
 from PyQt5.QtGui import QPainter
 
 
@@ -21,12 +20,14 @@ class DragGraphicsView(QGraphicsView):
         self._drag_start_positions.clear()
         self._drag_origin = self.mapToScene(event.pos())
         for item in self.scene().items():
-            if hasattr(item, "shape"):
+            if hasattr(item, "shape"):  # Ensure the item has a shape attribute
                 self._drag_start_positions[item] = item.pos()
 
         clicked_item = self.itemAt(event.pos())
         if clicked_item and hasattr(clicked_item, "shape"):
-            self._drag_group_id = clicked_item.shape.group_id
+            shape = clicked_item.shape
+            if hasattr(shape, "group_id"):  # Check if group_id exists
+                self._drag_group_id = shape.group_id
 
         super().mousePressEvent(event)
 
