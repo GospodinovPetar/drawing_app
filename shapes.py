@@ -21,63 +21,78 @@ class ShapeBase:
         self.group_id = None
 
 
+import math
+from PyQt5.QtWidgets import QGraphicsEllipseItem, QGraphicsLineItem, QGraphicsItemGroup
+from PyQt5.QtGui import QPen, QColor, QBrush
+
+
 class PolygonWithLines(QGraphicsItemGroup):
-    def __init__(
-        self,
-        vertices,
-        line_vertices=None,
-        fill=(255, 255, 255),
-        border_color=(0, 0, 0),
-        stroke_width=2,
-        group_id=None,
-    ):
+    def __init__(self, center, radius, line_vertices=None, fill=(255, 255, 255), border_color=(0, 0, 0), stroke_width=2, group_id=None):
         super().__init__()
 
         self.group_id = group_id  # Assign group_id to the polygon item
 
-        # Create the polygon from the vertices
-        self.polygon_item = QGraphicsPolygonItem(
-            QPolygonF([QPointF(x, y) for x, y in vertices])
-        )
-        self.polygon_item.setPen(QPen(QColor(*border_color), stroke_width))
-        self.polygon_item.setBrush(QBrush(QColor(*fill)))
+        # Create the circle by replacing the polygon with an ellipse
+        self.circle_item = QGraphicsEllipseItem(-radius, -radius, 2*radius, 2*radius)  # Define the bounding box of the circle
+        self.circle_item.setPen(QPen(QColor(*border_color), stroke_width))
+        self.circle_item.setBrush(QBrush(QColor(*fill)))
 
-        # Add the polygon item to the group
-        self.addToGroup(self.polygon_item)
+        # Add the circle item to the group
+        self.addToGroup(self.circle_item)
 
-        # Create and add lines if provided
         self.lines = []  # List to store line items
         if line_vertices:
             for line in line_vertices:
-                line_item = QGraphicsLineItem(
-                    line[0][0], line[0][1], line[1][0], line[1][1]
-                )
-                line_item.setPen(
-                    QPen(QColor(0, 0, 0))
-                )  # Set line color (black by default)
+                # Constrain the line to fit inside the circle
+                constrained_line = self.constrain_line_to_circle(line, radius)
+                line_item = QGraphicsLineItem(constrained_line[0], constrained_line[1], constrained_line[2], constrained_line[3])
+                line_item.setPen(QPen(QColor(0, 0, 0)))  # Set line color (black by default)
                 self.addToGroup(line_item)
                 self.lines.append(line_item)
                 line_item.shape = self  # Associate the line with this group
 
         # Enable interaction for the group (selection and movement)
-        self.setFlags(
-            QGraphicsItem.ItemIsSelectable
-            | QGraphicsItem.ItemIsMovable
-            | QGraphicsItem.ItemIsFocusable
-        )
+        self.setFlags(QGraphicsItem.ItemIsSelectable | QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsFocusable)
 
     def set_line(self, line_index, start_point, end_point):
         """Method to set the start and end point of a specific line."""
         if 0 <= line_index < len(self.lines):
             line_item = self.lines[line_index]
-            line_item.setLine(
-                start_point[0], start_point[1], end_point[0], end_point[1]
-            )
+            line_item.setLine(start_point[0], start_point[1], end_point[0], end_point[1])
 
     def add_to_scene(self, scene):
         """Method to add the group to the scene."""
         scene.addItem(self)
 
+    def clear(self):
+        """Method to remove both the circle and its lines from the scene."""
+        self.scene().removeItem(self.circle_item)  # Remove the circle
+        for line_item in self.lines:
+            self.scene().removeItem(line_item)  # Remove each line
+        self.scene().removeItem(self)  # Remove the entire group itself
+
+    def constrain_line_to_circle(self, line, radius):
+        """Constrain line to be inside the circle."""
+        # Unpack the two points that define the line
+        (x1, y1), (x2, y2) = line  # line is now a list of tuples (start_point, end_point)
+        center_x, center_y = 0, 0  # Assuming the circle's center is at (0, 0)
+
+        # Calculate the distance from the center to the line endpoints
+        dist1 = math.sqrt((x1 - center_x) ** 2 + (y1 - center_y) ** 2)
+        dist2 = math.sqrt((x2 - center_x) ** 2 + (y2 - center_y) ** 2)
+
+        # Scale the endpoints to fit inside the circle
+        if dist1 > radius:
+            scale_factor = radius / dist1
+            x1 = center_x + (x1 - center_x) * scale_factor
+            y1 = center_y + (y1 - center_y) * scale_factor
+
+        if dist2 > radius:
+            scale_factor = radius / dist2
+            x2 = center_x + (x2 - center_x) * scale_factor
+            y2 = center_y + (y2 - center_y) * scale_factor
+
+        return (x1, y1, x2, y2)
 
 class RectangleShape(ShapeBase):
     """

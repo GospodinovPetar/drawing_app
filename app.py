@@ -49,7 +49,7 @@ class DrawingApp(QMainWindow):
             ("Ellipse", self.addEllipse),
             ("Square", self.addSquare),
             ("Line", self.addLine),
-            ("Polygon", self.addPolygon),
+            # ("Polygon", self.addPolygon),
             ("Group", self.groupSelected),
             ("Ungroup", self.ungroupSelected),
             ("Color", self.changeColorSelected),
@@ -97,29 +97,35 @@ class DrawingApp(QMainWindow):
         self.items.append(item)
 
     def addPolygon(self):
-        # Define the vertices of the polygon
-        vertices = [(100, 0), (-100, 0), (-40, -40), (70, -40)]
+        # Example usage:
+        vertices = [(100, 0), (-100, 0), (-40, -40), (70, -40), (100, 0)]
 
-        # Define the lines as pairs of start and end points
-        line_vertices = [
-            # [(-40, -40), (100, 0)],
-            # [(0, 0), (200, 300)]
+        line_vertices = [  # Example lines inside the polygon
+            [(0, 0), (100, 100)],
+            [(-100, 0), (70, -40)]
         ]
 
-        # Create the polygon with lines, passing group_id if needed
-        polygon_item = PolygonWithLines(
-            vertices,
-            line_vertices,
-            fill=(173, 216, 230),
-            border_color=(0, 0, 255),
-            group_id="group1",
-        )
+        # Create a circle with lines inside it
+        # polygon_with_lines = PolygonWithLines(center=(0, 0), radius=100, line_vertices=line_vertices,
+        #                                       fill=(173, 216, 230), border_color=(0, 0, 255))
+        #
+        # polygon_with_lines.add_to_scene(self.scene)
 
-        # Add the polygon and lines to the scene
-        polygon_item.add_to_scene(self.scene)
-
-        # Update the second line
-        polygon_item.set_line(1, (-100, 20), (50, 50))
+        # # Create the polygon with lines, passing group_id if needed
+        # polygon_item = PolygonWithLines(
+        #     vertices,
+        #     line_vertices,
+        #     fill=(173, 216, 230),
+        #     border_color=(0, 0, 255),
+        #     group_id="group1",
+        # )
+        #
+        #
+        # # Add the polygon and lines to the scene
+        # polygon_item.add_to_scene(self.scene)
+        #
+        # # Update the second line
+        # polygon_item.set_line(1, (-100, 20), (50, 50))
 
     def addRectangle(self):
         self.addShape(RectangleShape(50, 50, 100, 60))
