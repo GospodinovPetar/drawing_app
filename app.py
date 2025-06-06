@@ -97,12 +97,11 @@ class DrawingApp(QMainWindow):
         self.items.append(item)
 
     def addPolygon(self):
-        # Example usage:
         vertices = [(100, 0), (-100, 0), (-40, -40), (70, -40), (100, 0)]
 
-        line_vertices = [  # Example lines inside the polygon
+        line_vertices = [  # Lines inside the polygon
             [(0, 0), (100, 100)],
-            [(-100, 0), (70, -40)]
+            [(-100, 0), (70, -40)],
         ]
 
         # Create a circle with lines inside it
@@ -154,9 +153,7 @@ class DrawingApp(QMainWindow):
 
     def groupSelected(self):
         """Assign a group ID to selected shapes."""
-        group_id = id(self) + len(
-            self.scene.selectedItems()
-        )  # Create a unique group ID
+        group_id = id(self) + len(self.scene.selectedItems())
 
         for item in self.scene.selectedItems():
             if hasattr(item, "shape") and item.shape is not None:
@@ -171,9 +168,7 @@ class DrawingApp(QMainWindow):
         for item in self.scene.selectedItems():
             if hasattr(item, "shape") and item.shape is not None:
                 shape = item.shape
-                if hasattr(
-                    shape, "group_id"
-                ):  # Ensure the shape has a group_id attribute
+                if hasattr(shape, "group_id"):
                     shape.group_id = None
 
     def changeColorSelected(self):
@@ -285,8 +280,8 @@ class DrawingApp(QMainWindow):
                 "type": type(shape).__name__,
                 "x": item.pos().x(),
                 "y": item.pos().y(),
-                "rotation": item.rotation(),  # Rotation angle
-                "scale_x": item.scale(),  # Scale (uniform scaling, assumes same scale for both axes)
+                "rotation": item.rotation(),
+                "scale_x": item.scale(),
                 "fill_color": shape.fill_color,
                 "border_color": shape.border_color,
                 "group_id": shape.group_id if shape.group_id else None,
@@ -300,11 +295,11 @@ class DrawingApp(QMainWindow):
                 entry["width"] = shape.width
                 entry["height"] = shape.height
             elif isinstance(shape, SquareShape):
-                entry["width"] = shape.width  # Just the side of the square
+                entry["width"] = shape.width
             elif isinstance(shape, LineShape):
                 entry["x2"] = shape.x2
                 entry["y2"] = shape.y2
-            elif isinstance(shape, PolygonShape):
+            elif isinstance(shape, PolygonWithLines):
                 # Restore the polygon with the scaled vertices
                 polygon = item.polygon()
                 center = polygon.boundingRect().center()
@@ -333,8 +328,8 @@ class DrawingApp(QMainWindow):
 
         for entry in data:
             shape_type = entry["type"]
-            fill_color = tuple(entry["fill_color"])  # Convert to tuple
-            border_color = tuple(entry["border_color"])  # Convert to tuple
+            fill_color = tuple(entry["fill_color"])
+            border_color = tuple(entry["border_color"])
 
             # Create the shape based on the type
             shape = None
@@ -349,7 +344,7 @@ class DrawingApp(QMainWindow):
             elif shape_type == "PolygonShape":
                 # Restore the polygon with the scaled vertices
                 scaled_vertices = entry["vertices"]
-                shape = PolygonShape(scaled_vertices, fill_color)
+                shape = PolygonWithLines(scaled_vertices, fill_color)
             elif shape_type == "SquareShape":
                 shape = SquareShape(entry["x"], entry["y"], entry["width"], fill_color)
             elif shape_type == "LineShape":
@@ -364,26 +359,21 @@ class DrawingApp(QMainWindow):
                 self.addShape(shape)
 
                 # Set the position of the shape as per the saved data
-                shape_item = self.scene.items()[-1]  # Get the last item added
-                shape_item.setPos(entry["x"], entry["y"])  # Set the position
+                shape_item = self.scene.items()[-1]
+                shape_item.setPos(entry["x"], entry["y"])
 
                 # Apply rotation and scale
-                shape_item.setRotation(entry["rotation"])  # Set rotation
-                shape_item.setScale(
-                    entry["scale_x"]
-                )  # Apply uniform scale (for non-uniform scaling, we need to tweak)
+                shape_item.setRotation(entry["rotation"])
+                shape_item.setScale(entry["scale_x"])
 
-                # Apply colors based on the shape type
                 if isinstance(shape_item, QGraphicsLineItem):
                     # For lines, use setPen to apply the color
-                    shape_item.setPen(QPen(QColor(*border_color)))  # Set border color
-                    shape_item.setPen(
-                        QPen(QColor(*fill_color))
-                    )  # Set the fill color for the line (if applicable)
+                    shape_item.setPen(QPen(QColor(*border_color)))
+                    shape_item.setPen(QPen(QColor(*fill_color)))
                 else:
                     # For other shapes, use setBrush for the fill color
-                    shape_item.setBrush(QBrush(QColor(*fill_color)))  # Set fill color
-                    shape_item.setPen(QPen(QColor(*border_color)))  # Set border color
+                    shape_item.setBrush(QBrush(QColor(*fill_color)))
+                    shape_item.setPen(QPen(QColor(*border_color)))
 
 
 def main():
