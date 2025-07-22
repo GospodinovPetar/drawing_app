@@ -87,3 +87,5 @@ This is a simple graphical drawing application built with **PyQt5**. The app all
 
    ```bash
    pip install -r requirements.txt
+
+> _Created by Petar Gospodinov_  
